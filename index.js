@@ -136,7 +136,8 @@ class Parameter {
  * Module exports
  * @type {Function}
  */
-module.exports = Parameter;
+// module.exports = Parameter;
+export default Parameter
 
 /**
  * add custom rule to global rules list.
@@ -609,8 +610,24 @@ function checkArray(rule, value) {
   ? rule
   : rule.rule || formatRule(rule.itemType);
 
+  var keys = {}
+
   value.forEach(function (v, i) {
     var index = '[' + i + ']';
+
+    var key = rule.repeatKey
+    if (key) {
+      if (keys[key]) {
+        errors.push({
+          field: index,
+          message: this.t('%s value cannot be duplicated', key),
+          code: self.t('invalid')
+        });
+      } else {
+        keys[key] = 1
+      }
+    }
+
     var errs = checker.call(self, subRule, v);
 
     if (typeof errs === 'string') {
