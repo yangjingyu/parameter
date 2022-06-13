@@ -136,8 +136,7 @@ class Parameter {
  * Module exports
  * @type {Function}
  */
-// module.exports = Parameter;
-export default Parameter
+module.exports = Parameter;
 
 /**
  * add custom rule to global rules list.
