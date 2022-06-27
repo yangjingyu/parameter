@@ -1,7 +1,5 @@
 'use strict';
 
-var util = require('util');
-
 /**
  * Regexps
  */
@@ -40,7 +38,7 @@ class Parameter {
     if (typeof this.translate === 'function') {
       return this.translate.apply(this, args);
     } else {
-      return util.format.apply(util, args);
+      return args[0].replace('%s', args[1])
     }
   }
 
@@ -86,8 +84,10 @@ class Parameter {
 
       var has = value !== null && value !== undefined;
 
+      var ignored = rule.ignored && (rule.ignored(obj) || false)
+
       if (!has) {
-        if (rule.required !== false) {
+        if (rule.required !== false && !ignored) {
           errors.push({
             message: this.t('required'),
             field: key,
@@ -136,7 +136,8 @@ class Parameter {
  * Module exports
  * @type {Function}
  */
-module.exports = Parameter;
+// module.exports = Parameter;
+export default Parameter
 
 /**
  * add custom rule to global rules list.
@@ -610,20 +611,34 @@ function checkArray(rule, value) {
   : rule.rule || formatRule(rule.itemType);
 
   var keys = {}
+  var keys = new Set()
 
-  value.forEach(function (v, i) {
+  value.forEach((v, i) => {
     var index = '[' + i + ']';
 
-    var key = rule.repeatKey
-    if (key) {
-      if (keys[key]) {
+    if (typeof rule.repeat === 'boolean') {
+      if (keys.has(v)) {
         errors.push({
           field: index,
-          message: this.t('%s value cannot be duplicated', key),
+          message: this.t('%s value cannot be duplicated', v),
           code: self.t('invalid')
         });
       } else {
-        keys[key] = 1
+        // keys[v] = 1
+        keys.add(v)
+      }
+    } else if (typeof rule.repeat === 'string') {
+      var key = rule.repeat
+      if (key) {
+        if (keys.has(v[key])) {
+          errors.push({
+            field: index,
+            message: this.t('%s key value cannot be duplicated', key),
+            code: self.t('invalid')
+          });
+        } else {
+          keys.add(v[key])
+        }
       }
     }
 
